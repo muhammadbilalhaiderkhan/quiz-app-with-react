@@ -6,8 +6,9 @@ function App() {
   let [index, setIndex] = useState(0);
   let [options, setOptions] = useState([]);
   let [selected, setSelected] = useState(null);
+  let [score, setScore] = useState(0);
+  let [finished, setFinished] = useState(false);
 
-  // ✅ shuffle function pehle define kiya
   const shuffleOption = (questionObj) => {
     let allOptions = [
       ...questionObj.incorrectAnswers,
@@ -18,12 +19,13 @@ function App() {
     setSelected(null);
   };
 
+
   const getApiData = () => {
     fetch("https://the-trivia-api.com/v2/questions")
       .then((data) => data.json())
       .then((value) => {
         if (value.length > 0) {
-          shuffleOption(value[0]); // ✅ ab error nahi aayega
+          shuffleOption(value[0]);
         }
         setQuiz(value);
       })
@@ -46,9 +48,14 @@ function App() {
     );
   }
 
+
   const handleSelect = (opt) => {
     setSelected(opt);
+    if (opt === quiz[index].correctAnswer) {
+      setScore(score + 1); 
+    }
   };
+
 
   const nextQues = () => {
     if (index < quiz.length - 1) {
@@ -56,18 +63,50 @@ function App() {
       setIndex(newIndex);
       shuffleOption(quiz[newIndex]);
     } else {
-      alert("🎉 Quiz Finished!");
+      setFinished(true); 
     }
+  };
+
+
+  const restartQuiz = () => {
+    setIndex(0);
+    setScore(0);
+    setFinished(false);
+    shuffleOption(quiz[0]);
   };
 
   const currentQues = quiz[index];
 
+
+  if (finished) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl text-center">
+          <h1 className="text-2xl font-bold text-indigo-600 mb-4">🎉 Quiz Finished!</h1>
+          <p className="text-lg font-medium text-gray-700 mb-6">
+            Your Score: <span className="text-indigo-600">{score}</span> / {quiz.length}
+          </p>
+          <button
+            onClick={restartQuiz}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition"
+          >
+            Restart Quiz
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Quiz UI
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl">
         <h1 className="text-2xl font-bold text-center text-indigo-600">
           Quiz App
         </h1>
+        <p className="text-sm text-gray-500 text-center">
+          Question {index + 1} of {quiz.length}
+        </p>
         <hr className="my-4" />
 
         <p className="text-lg font-medium text-gray-800 mb-6">
@@ -108,9 +147,10 @@ function App() {
         <div className="flex justify-end mt-6">
           <button
             onClick={nextQues}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition"
+            disabled={!selected}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition disabled:opacity-50"
           >
-            Next →
+            {index === quiz.length - 1 ? "Finish" : "Next →"}
           </button>
         </div>
       </div>
